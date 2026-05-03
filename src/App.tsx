@@ -22,11 +22,13 @@ import {
   Sun,
   Fish,
   Shell,
-  Menu
+  Menu,
+  X,
+  Music
 } from 'lucide-react';
 
 // --- Types ---
-type View = 'home' | 'menu' | 'reservation' | 'contact' | 'verhaal';
+type View = 'home' | 'menu' | 'reservation' | 'contact' | 'verhaal' | 'muziek';
 
 // --- Components ---
 
@@ -69,6 +71,7 @@ const LogoIcon = ({ className = "w-10 h-10", invert = false }: { className?: str
 
 const Navbar = ({ currentView, setView }: { currentView: View; setView: (v: View) => void }) => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -77,6 +80,14 @@ const Navbar = ({ currentView, setView }: { currentView: View; setView: (v: View
   }, []);
 
   const isLightText = !isScrolled && currentView === 'home';
+
+  const navItems: { label: string; view: View }[] = [
+    { label: 'Het Verhaal', view: 'verhaal' },
+    { label: 'Menu', view: 'menu' },
+    { label: 'Muziek', view: 'muziek' },
+    { label: 'Reserveren', view: 'reservation' },
+    { label: 'Contact', view: 'contact' },
+  ];
 
   return (
     <header 
@@ -88,31 +99,34 @@ const Navbar = ({ currentView, setView }: { currentView: View; setView: (v: View
     >
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <button 
-          onClick={() => setView('home')}
-          className="flex flex-col items-start group cursor-pointer transition-transform duration-500 hover:scale-105"
+          onClick={() => {
+            setView('home');
+            setIsMenuOpen(false);
+          }}
+          className="flex flex-col items-center group cursor-pointer transition-transform duration-500 hover:scale-105"
         >
           <span className={`font-serif text-xl md:text-2xl tracking-[0.3em] font-bold leading-tight transition-colors duration-500 ${
             isScrolled || currentView !== 'home' ? 'text-oester-blue' : 'text-white'
           }`}>OESTERHUT</span>
-          <span className={`font-serif text-[8px] tracking-[0.4em] uppercase leading-none mt-1 transition-colors duration-500 ${
+          <span className={`font-serif text-[7px] md:text-[8px] tracking-[0.6em] uppercase leading-none mt-1 transition-colors duration-500 text-center ${
             isScrolled || currentView !== 'home' ? 'text-stone-400' : 'text-white/60'
           }`}>Pop-up Gastronomy</span>
         </button>
 
         <nav className="hidden md:flex items-center gap-10">
-          {(['verhaal', 'menu', 'reservation', 'contact'] as View[]).map((v) => (
+          {navItems.map((item) => (
             <button
-              key={v}
-              onClick={() => setView(v)}
+              key={item.view}
+              onClick={() => setView(item.view)}
               className={`font-serif text-[10px] tracking-[0.25em] uppercase transition-all relative pb-2 group cursor-pointer ${
-                currentView === v 
+                currentView === item.view 
                   ? 'text-oester-blue' 
                   : (isScrolled || currentView !== 'home' ? 'text-stone-500' : 'text-white/80') + ' hover:text-oester-blue'
               }`}
             >
-              {v === 'reservation' ? 'Reserveren' : v === 'verhaal' ? 'Het Verhaal' : v.charAt(0).toUpperCase() + v.slice(1)}
+              {item.label}
               <span className={`absolute bottom-0 left-0 w-full h-[1px] bg-oester-blue transition-transform duration-300 origin-left ${
-                currentView === v ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                currentView === item.view ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
               }`} />
             </button>
           ))}
@@ -127,13 +141,76 @@ const Navbar = ({ currentView, setView }: { currentView: View; setView: (v: View
                 : 'bg-white text-oester-blue hover:bg-oester-stone'
             }`}
           >
-            BOEKEN
+            RESERVEER
           </button>
-          <button className="md:hidden text-oester-blue">
-            <Menu size={24} />
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={`md:hidden p-2 transition-colors ${
+              isScrolled || currentView !== 'home' || isMenuOpen ? 'text-oester-blue' : 'text-white'
+            }`}
+          >
+            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 bg-oester-stone z-[60] flex flex-col items-center justify-center pt-20 px-6 md:hidden"
+          >
+            <div className="flex flex-col items-center gap-8 w-full max-w-sm">
+              {navItems.map((item, idx) => (
+                <motion.button
+                  key={item.view}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + idx * 0.1 }}
+                  onClick={() => {
+                    setView(item.view);
+                    setIsMenuOpen(false);
+                  }}
+                  className={`font-serif text-2xl tracking-[0.2em] uppercase transition-all ${
+                    currentView === item.view ? 'text-oester-blue' : 'text-stone-400'
+                  }`}
+                >
+                  {item.label}
+                </motion.button>
+              ))}
+                <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + navItems.length * 0.1 }}
+                onClick={() => {
+                  setView('reservation');
+                  setIsMenuOpen(false);
+                }}
+                className="mt-8 w-full py-5 bg-oester-blue text-white font-sans text-xs font-bold tracking-[0.3em] uppercase"
+              >
+                Direct Reserveren
+              </motion.button>
+            </div>
+            
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="mt-20 flex flex-col items-center gap-4 text-oester-blue/40"
+            >
+              <div className="flex gap-6">
+                <Instagram size={20} />
+                <Mail size={20} />
+              </div>
+              <p className="text-[8px] tracking-[0.4em] uppercase">Amsterdam • Île de Ré • Cancale</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 };
@@ -142,12 +219,12 @@ const Footer = () => (
   <footer className="bg-stone-100 border-t border-stone-200 py-16 px-6 md:px-12">
     <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
       <div className="flex flex-col items-center md:items-start gap-4">
-        <div className="flex flex-col items-start translate-y-1">
+        <div className="flex flex-col items-center md:items-start translate-y-1">
           <span className="font-serif text-lg tracking-[0.3em] font-bold leading-tight text-oester-blue">OESTERHUT</span>
-          <span className="font-serif text-[7px] tracking-[0.4em] uppercase leading-none mt-1 text-stone-400">Pop-up Gastronomy</span>
+          <span className="font-serif text-[6px] tracking-[0.4em] uppercase leading-none mt-1 text-stone-400 w-full text-center md:text-left">Pop-up Gastronomy</span>
         </div>
         <p className="font-serif text-xs italic text-stone-500 text-center md:text-left max-w-xs">
-          © 2024 Oesterhut Amsterdam. Freshly shucked under the Atlantic breeze.
+          © 2026 Oesterhut Amsterdam. Freshly shucked under the Atlantic breeze.
         </p>
       </div>
 
@@ -185,9 +262,26 @@ const HomeView = ({ setView }: { setView: (v: View) => void, key?: string }) => 
         />
       </div>
       <div className="relative z-10 text-center px-6 text-white max-w-4xl flex flex-col items-center">
-        <h1 className="font-serif text-5xl md:text-7xl mb-6 leading-tight">De Franse Kust in Amsterdam</h1>
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Restaurant",
+              "name": "Oesterhut Amsterdam",
+              "image": "https://www.oesterhut.nl/oesterhut_logo.png",
+              "description": "Een uniek pop-up gastronomie concept gespecialiseerd in verse oesters uit Cancale, Île de Ré en de Waddenzee.",
+              "servesCuisine": "French, Seafood, Oysters",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Amsterdam",
+                "addressCountry": "NL"
+              },
+              "priceRange": "$$",
+              "url": "https://www.oesterhut.nl"
+            })}
+          </script>
+          <h1 className="font-serif text-5xl md:text-7xl mb-6 leading-tight">De Franse Kust in Amsterdam</h1>
         <p className="font-serif italic text-lg md:text-xl mb-10 text-stone-100/90 max-w-2xl mx-auto">
-          Verse oesters, zilte verhalen en wisselende locaties. Een uniek pop-up concept.
+          Verse oesters uit Cancale, Île de Ré en de Waddenzee. Zilte verhalen en wisselende locaties.
         </p>
         <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
           <button 
@@ -252,7 +346,7 @@ const HomeView = ({ setView }: { setView: (v: View) => void, key?: string }) => 
         <h3 className="font-serif text-3xl md:text-4xl text-oester-blue mb-16 max-w-3xl mx-auto">
           Met trots gepresenteerd door de meesters van de Atlantische oceaan
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
           <div className="bg-white p-12 border border-oester-blue/5 hover:border-oester-blue/20 transition-all group">
             <h4 className="font-serif text-2xl tracking-tighter font-bold mb-6 text-oester-blue">SAINT KERBER</h4>
             <p className="text-oester-blue/70 leading-relaxed text-sm">
@@ -263,6 +357,12 @@ const HomeView = ({ setView }: { setView: (v: View) => void, key?: string }) => 
             <h4 className="font-serif text-2xl tracking-tighter font-bold mb-6 text-oester-blue">LA CABANE OCÉANE</h4>
             <p className="text-oester-blue/70 leading-relaxed text-sm">
               De zilte passie van het Île de Ré. Bekend om hun verfijnde 'Fines de Claire' oesters die de zon van de Franse westkust in zich dragen.
+            </p>
+          </div>
+          <div className="bg-white p-12 border border-oester-blue/5 hover:border-oester-blue/20 transition-all">
+            <h4 className="font-serif text-2xl tracking-tighter font-bold mb-6 text-oester-blue">WILDE WADOESTERS</h4>
+            <p className="text-oester-blue/70 leading-relaxed text-sm">
+              Puur natuur uit de Waddenzee. Handgeraapt met vakmanschap en oog voor het unieke ecosysteem. Een robuuste oester met een onnavolgbare zilte smaak uit eigen water.
             </p>
           </div>
         </div>
@@ -321,10 +421,10 @@ const MenuView = ({ key }: { key?: string }) => (
       {/* Left Column */}
       <div className="lg:col-span-7 space-y-20">
         {/* Nos Huîtres */}
-        <section>
-          <h2 className="font-serif text-3xl text-oester-blue border-b border-oester-blue/10 pb-3 mb-10 flex items-center gap-3">
-            <Droplets size={24} className="text-oester-blue/60" />
-            Nos Huîtres
+        <section aria-labelledby="oyster-menu-title">
+          <h2 id="oyster-menu-title" className="font-serif text-3xl text-oester-blue border-b border-oester-blue/10 pb-3 mb-10 flex items-center gap-3">
+            <Droplets size={24} aria-hidden="true" className="text-oester-blue/60" />
+            La Carte des Huîtres & Fruits de Mer
           </h2>
           
           <div className="space-y-12">
@@ -345,17 +445,31 @@ const MenuView = ({ key }: { key?: string }) => (
             </div>
 
             <div>
-              <h3 className="text-[10px] tracking-[0.3em] font-bold text-stone-400 mb-6 uppercase">Les Spéciales "Oesterhut"</h3>
-              <div className="space-y-4">
-                <div className="flex items-end">
-                  <span className="font-serif text-lg">La Douzaine (N°2)</span>
-                  <div className="menu-leader"></div>
-                  <span className="font-sans">32.00€</span>
+              <h3 className="text-[10px] tracking-[0.3em] font-bold text-stone-400 mb-6 uppercase">La Sélection Oesterhut</h3>
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-end">
+                    <span className="font-serif text-lg">Wilde Wadoesters (Waddenzee)</span>
+                    <div className="menu-leader"></div>
+                    <span className="font-sans">3.75€ / stuk</span>
+                  </div>
+                  <p className="text-[10px] italic text-stone-400">Puur natuur uit het Werelderfgoed. Robuust en vol van smaak.</p>
                 </div>
-                <div className="flex items-end">
-                  <span className="font-serif text-lg">La Demi-Douzaine (N°2)</span>
-                  <div className="menu-leader"></div>
-                  <span className="font-sans">17.00€</span>
+                <div>
+                  <div className="flex items-end">
+                    <span className="font-serif text-lg">Cancale Spéciale Nº3</span>
+                    <div className="menu-leader"></div>
+                    <span className="font-sans">3.50€ / stuk</span>
+                  </div>
+                  <p className="text-[10px] italic text-stone-400">Direct uit de Franse baai. Zilt, stevig en karaktervol.</p>
+                </div>
+                <div>
+                  <div className="flex items-end">
+                    <span className="font-serif text-lg">Île de Ré Fines de Claire</span>
+                    <div className="menu-leader"></div>
+                    <span className="font-sans">3.25€ / stuk</span>
+                  </div>
+                  <p className="text-[10px] italic text-stone-400">Verfijnd en zacht, met een subtiele nootachtige afdronk.</p>
                 </div>
               </div>
             </div>
@@ -462,6 +576,56 @@ const MenuView = ({ key }: { key?: string }) => (
             ))}
           </div>
         </div>
+
+        <section>
+          <h2 className="font-serif text-3xl text-oester-blue border-b border-oester-blue/10 pb-3 mb-10 flex items-center gap-3">
+            <Wine size={24} className="text-oester-blue/60" />
+            Nos Cocktails & Spiritueux
+          </h2>
+          
+          <div className="space-y-10">
+            <div>
+              <h3 className="text-[10px] tracking-[0.3em] font-bold text-oester-blue/50 mb-6 uppercase">La Sélection Negroni</h3>
+              <div className="space-y-4">
+                {[
+                  { name: 'Negroni Classico', desc: 'Gin, Campari, Vermouth Rosso, Orange.', price: '12.00€' },
+                  { name: 'Negroni de l\'Océan', desc: 'Infusé à la salicorne, touche saline.', price: '14.00€' },
+                  { name: 'Negroni Bianco', desc: 'Gin, Suze, Lillet Blanc, Citron.', price: '13.00€' },
+                ].map((item) => (
+                  <div key={item.name} className="space-y-1">
+                    <div className="flex justify-between items-end">
+                      <span className="font-serif text-lg">{item.name}</span>
+                      <div className="menu-leader"></div>
+                      <span className="font-sans">{item.price}</span>
+                    </div>
+                    <p className="text-[10px] italic text-stone-400">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-[10px] tracking-[0.3em] font-bold text-oester-blue/50 mb-6 uppercase">Gins Premium & Tonic</h3>
+              <div className="space-y-4">
+                {[
+                  { name: 'Gin Mare', desc: 'Méditerranéen, romarin, olive arbequina.', price: '14.00€' },
+                  { name: 'Monkey 47', desc: 'Forêt Noire, 47 botaniques, complexe.', price: '16.00€' },
+                  { name: 'Hendrick\'s Luna', desc: 'Floral, concombre, baies de genièvre.', price: '13.00€' },
+                  { name: 'Copperhead', desc: 'Cardamome, coriandre, zestes d\'orange.', price: '15.00€' },
+                ].map((item) => (
+                  <div key={item.name} className="space-y-1">
+                    <div className="flex justify-between items-end">
+                      <span className="font-serif text-lg">{item.name}</span>
+                      <div className="menu-leader"></div>
+                      <span className="font-sans">{item.price}</span>
+                    </div>
+                    <p className="text-[10px] italic text-stone-400">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
         <section>
           <h2 className="font-serif text-3xl text-oester-blue border-b border-oester-blue/10 pb-3 mb-10 flex items-center gap-3">
@@ -697,6 +861,63 @@ export default function App() {
                     <div className="flex flex-col items-center gap-2"><Sun size={32} /><span className="text-[10px] tracking-widest uppercase">Atlantic Spirit</span></div>
                     <div className="flex flex-col items-center gap-2"><Waves size={32} /><span className="text-[10px] tracking-widest uppercase">Changing Tides</span></div>
                   </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+          {view === 'muziek' && (
+            <motion.div 
+              key="muziek"
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="pt-48 pb-24 text-center px-6 max-w-4xl mx-auto"
+            >
+              <span className="text-[10px] tracking-[0.4em] uppercase text-stone-400 mb-6 block">Beleving</span>
+              <h1 className="font-serif text-5xl md:text-7xl text-oester-blue mb-12">Zilte Klanken</h1>
+              
+              <div className="bg-white p-8 md:p-16 border border-stone-100 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-oester-blue transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-700"></div>
+                <Music size={40} className="text-stone-200 mx-auto mb-8" />
+                
+                <h2 className="font-serif text-3xl text-oester-blue mb-4">Matthijs Lievaart</h2>
+                <p className="font-serif italic text-xl text-stone-500 mb-8">Live op de Oesterhut</p>
+                
+                <div className="w-12 h-[1px] bg-stone-300 mx-auto mb-8"></div>
+                
+                <p className="text-oester-blue/70 leading-relaxed mb-10 max-w-lg mx-auto">
+                  Terwijl de oesters worden geopend en de glazen worden ingeschonken, omlijst Matthijs de middag met zijn karakteristieke interpretaties van de Franse chanson en maritieme sferen.
+                </p>
+                
+                <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
+                  <a 
+                    href="https://matthijslievaart.nl/muziek/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-8 py-4 border border-oester-blue text-oester-blue font-sans text-[10px] font-bold tracking-[0.3em] uppercase hover:bg-oester-blue hover:text-white transition-all"
+                  >
+                    Beluister zijn Repertoire
+                  </a>
+                  <button 
+                    onClick={() => setView('reservation')}
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-oester-blue text-white font-sans text-[10px] font-bold tracking-[0.3em] uppercase hover:bg-oester-blue/90 shadow-xl transition-all"
+                  >
+                    Kom Genieten
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-12 text-left bg-stone-50 p-8">
+                <div>
+                  <h3 className="font-serif text-lg text-oester-blue mb-4">Sfeer & Ambiance</h3>
+                  <p className="text-stone-500 text-sm leading-relaxed">
+                    Wij geloven dat gastronomie verder gaat dan de smaak alleen. De juiste klank op het juiste moment versterkt de zilte ervaring van onze oesters.
+                  </p>
+                </div>
+                <div>
+                    <h3 className="font-serif text-lg text-oester-blue mb-4">Frans Chanson</h3>
+                    <p className="text-stone-500 text-sm leading-relaxed">
+                      Van Brel tot Aznavour, maar altijd met een eigentijdse twist die past bij de levendige sfeer van onze pop-up locaties.
+                    </p>
                 </div>
               </div>
             </motion.div>
