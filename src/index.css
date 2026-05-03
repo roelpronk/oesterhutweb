@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Noto Serif", ui-serif, Georgia, serif;
+
+  --color-oester-navy: #041632;
+  --color-oester-blue: #1B2B48;
+  --color-oester-stone: #f9f9f7;
+  --color-oester-sand: #f4f4f2;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-oester-stone text-oester-navy antialiased;
+  }
+}
+
+.nautical-line {
+  background-image: radial-gradient(circle, #1B2B48 1px, transparent 1px);
+  background-size: 16px 1px;
+  background-repeat: repeat-x;
+  height: 1px;
+  width: 100%;
+}
+
+.menu-leader {
+  flex-grow: 1;
+  border-bottom: 1px dotted rgba(27, 43, 72, 0.3);
+  margin: 0 8px 4px 8px;
+}
